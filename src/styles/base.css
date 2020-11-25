@@ -1,0 +1,22 @@
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+div {
+    margin: 0;
+    padding: 0;
+}
+
+/* 转场动画 */
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity .2s
+}
+
+.fade-enter-active,
+.fade-leave-active {
+    opacity: 0
+}
