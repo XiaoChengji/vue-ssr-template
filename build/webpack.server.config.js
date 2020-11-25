@@ -3,6 +3,7 @@ const merge = require('webpack-merge')
 const nodeExternals = require('webpack-node-externals') // Webpack allows you to define externals - modules that should not be bundled.
 const VueSSRServerPlugin = require('vue-server-renderer/server-plugin')
 const base = require('./webpack.base.config')
+const isProd = process.env.NODE_ENV === 'production'
 
 const plugins = [
     new webpack.DefinePlugin({
@@ -11,6 +12,37 @@ const plugins = [
     }),
     new VueSSRServerPlugin()
 ]
+
+let cssRules = [
+    {
+        loader: 'vue-style-loader', // 从 JS 中创建样式节点
+    },
+    {
+        loader: 'css-loader', // 转化 CSS 为 CommonJS
+    }
+]
+lessRules = cssRules.concat({ loader: 'less-loader' })
+
+if (isProd) {
+    cssRules = [
+        {
+            loader: 'css-loader'
+        },
+        {
+            loader: 'postcss-loader',
+            options: {
+                postcssOptions: {
+                    plugins: [
+                        [
+                            'autoprefixer'
+                        ]
+                    ]
+                }
+            }
+        }
+    ]
+    lessRules = cssRules.concat({ loader: 'null-loader' })
+}
 
 module.exports = merge(base, {
     target: 'node',
@@ -24,5 +56,17 @@ module.exports = merge(base, {
     externals: nodeExternals({ // 忽略所有node_module包文件
         allowlist: /\.css$/ // 只允许引入CSS文件
     }),
-    plugins
+    plugins,
+    module: {
+        rules: [
+            {
+                test: /\.css$/,
+                use: cssRules
+            },
+            {
+                test: /\.less$/,
+                use: lessRules
+            }
+        ]
+    }
 })

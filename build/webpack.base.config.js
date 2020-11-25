@@ -2,8 +2,6 @@ const path = require('path')
 const webpack = require('webpack')
 const { VueLoaderPlugin } = require('vue-loader')
 const CompressionPlugin = require('compression-webpack-plugin') // 生成Gzip
-const MiniCssExtractPlugin = require('mini-css-extract-plugin') // 将CSS抽取到单独的文件
-const CssMinimizerPlugin = require('css-minimizer-webpack-plugin') // 压缩CSS文件
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin') // 压缩JS文件
 const isProd = process.env.NODE_ENV === 'production'
 
@@ -32,59 +30,8 @@ if (isProd) {
         // 开启 gzip 压缩
         new CompressionPlugin(),
         // 根据模块的相对路径生成一个四位数的hash作为模块id, 建议用于生产环境。
-        new webpack.HashedModuleIdsPlugin(),
-        // 抽取样式放至style.css内
-        new MiniCssExtractPlugin({
-            filename: 'common.[chunkhash].css'
-        })
+        new webpack.HashedModuleIdsPlugin()
     )
-}
-
-let cssRules = [
-    {
-        loader: 'vue-style-loader', // 从 JS 中创建样式节点
-    },
-    {
-        loader: 'css-loader', // 转化 CSS 为 CommonJS
-    }
-]
-let lessRules = [
-    {
-        loader: 'vue-style-loader', // 从 JS 中创建样式节点
-    },
-    {
-        loader: 'css-loader', // 转化 CSS 为 CommonJS
-    },
-    {
-        loader: 'less-loader' // 编译 Less 为 CSS
-    } 
-]
-if (isProd) {
-    cssRules = [
-        {
-            loader: MiniCssExtractPlugin.loader,
-            options: {
-                // 启用 CommonJS 语法，解决 export 'default' (imported as 'mod') was not found
-                esModule: false
-            }
-        },
-        {
-            loader: 'css-loader'
-        },
-        {
-            loader: 'postcss-loader',
-            options: {
-                postcssOptions: {
-                    plugins: [
-                        [
-                            'autoprefixer'
-                        ]
-                    ]
-                }
-            }
-        }
-    ]
-    lessRules = cssRules.concat({ loader: 'less-loader' })
 }
 
 module.exports = {
@@ -131,19 +78,8 @@ module.exports = {
             {
                 test: /\.(woff|eot|ttf)\??.*$/,
                 loader: 'url-loader?name=fonts/[name].[md5:hash:hex:7].[ext]'
-            },
-            {
-                test: /\.css$/,
-                use: cssRules
-            },
-            {
-                test: /\.less$/,
-                use: lessRules
             }
         ]
-    },
-    optimization: {
-        minimizer: isProd ? [new CssMinimizerPlugin()] : []
     },
     performance: {
         hints: false

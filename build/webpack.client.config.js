@@ -1,8 +1,9 @@
 const webpack = require('webpack')
 const merge = require('webpack-merge')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin') // 将CSS抽取到单独的文件
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin') // 压缩CSS文件
 const VueSSRClientPlugin = require('vue-server-renderer/client-plugin')
 const base = require('./webpack.base.config')
-
 const isProd = process.env.NODE_ENV === 'production'
 
 const plugins = [
@@ -14,6 +15,46 @@ const plugins = [
     }),
     new VueSSRClientPlugin()
 ]
+
+if (isProd) {
+    plugins.push(        
+        new MiniCssExtractPlugin({ filename: 'common.[chunkhash].css'}) // 抽取样式放至style.css内
+    )
+}
+
+let cssRules = [
+    {
+        loader: 'vue-style-loader', // 从 JS 中创建样式节点
+    },
+    {
+        loader: 'css-loader', // 转化 CSS 为 CommonJS
+    }
+]
+lessRules = cssRules.concat({ loader: 'less-loader' })
+
+if (isProd) {
+    cssRules = [
+        {
+            loader: MiniCssExtractPlugin.loader
+        },
+        {
+            loader: 'css-loader'
+        },
+        {
+            loader: 'postcss-loader',
+            options: {
+                postcssOptions: {
+                    plugins: [
+                        [
+                            'autoprefixer'
+                        ]
+                    ]
+                }
+            }
+        }
+    ]
+    lessRules = cssRules.concat({ loader: 'less-loader' })
+}
 
 const config = {
     entry: {
@@ -42,6 +83,21 @@ const config = {
                 }
             },
         }
+    },
+    module: {
+        rules: [
+            {
+                test: /\.css$/,
+                use: cssRules
+            },
+            {
+                test: /\.less$/,
+                use: lessRules
+            }
+        ]
+    },
+    optimization: {
+        minimizer: isProd ? [new CssMinimizerPlugin()] : []
     }
 }
 
